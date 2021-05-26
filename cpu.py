@@ -43,9 +43,8 @@ def alu(data0, data1, aluop, zero, alu_out):
          alu_out |= data0 + data1
       with aluop == 0x7:
          alu_out|= data0 + data1
-      with data0 == data1:
-         zero |= 1
 
+   zero <<= (data0 == data1)
    return zero, alu_out
 
 def controller(op, func, reg_dst, branch, regwrite, alu_src, mem_write, mem_to_reg, alu_op):
@@ -92,6 +91,7 @@ def pc_update(branch_and, imm_signext, pc):
          next_pc |= pc + 1 + imm_signext
       with pyrtl.otherwise:
          next_pc |= pc + 1
+   
    pc.next <<= next_pc
 
 def write_back(rf_write, alu_out, data1, mem_to_reg, mem_write, regwrite):
@@ -239,7 +239,7 @@ if __name__ == '__main__':
 
    # Initialize the i_mem with your instructions.
    i_mem_init = {}
-   with open('i_mem_init3.txt', 'r') as fin:
+   with open('realTest2_i_mem_init.txt', 'r') as fin:
         i = 0
         for line in fin.readlines():
             i_mem_init[i] = int(line, 16)
@@ -250,13 +250,13 @@ if __name__ == '__main__':
    })
 
    # Run for an arbitrarily large number of cycles.
-   for cycle in range(5):
+   for cycle in range(350):
       sim.step({})
 
     # Use render_trace() to debug if your code doesn't work.
     # sim_trace.render_trace()
    
-   sim_trace.render_trace(symbol_len=10)
+   #sim_trace.render_trace(symbol_len=10)
 
     # You can also print out the register file or memory like so if you want to debug:
    print(sim.inspect_mem(d_mem))
