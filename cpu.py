@@ -182,9 +182,9 @@ def top():
    pc_update(branch_and, imm_signext, pc)
 
    #raise NotImplementedError
-
+top()
+ 
 if __name__ == '__main__':
-   top()
    """
 
     Here is how you can test your code.
