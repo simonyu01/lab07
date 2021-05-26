@@ -65,9 +65,9 @@ def controller(op, func, reg_dst, branch, regwrite, alu_src, mem_write, mem_to_r
       with op == 0xD: #ORI
          control_signals |= 0x0C4 
       with op == 0x23: #LW
-         control_signals |= 0x2AE
+         control_signals |= 0x0AE
       with op == 0x2B: #SW
-         control_signals |= 0x237
+         control_signals |= 0x037
       with op == 0x4: #BEQ
          control_signals |= 0x100
    
@@ -182,9 +182,11 @@ def top():
    pc_update(branch_and, imm_signext, pc)
 
    #raise NotImplementedError
+
 top()
- 
+
 if __name__ == '__main__':
+   
    """
 
     Here is how you can test your code.
@@ -248,7 +250,7 @@ if __name__ == '__main__':
    })
 
    # Run for an arbitrarily large number of cycles.
-   for cycle in range(1):
+   for cycle in range(5):
       sim.step({})
 
     # Use render_trace() to debug if your code doesn't work.
