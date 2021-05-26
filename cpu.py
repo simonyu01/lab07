@@ -63,7 +63,7 @@ def controller(op, func, reg_dst, branch, regwrite, alu_src, mem_write, mem_to_r
       with op == 0xF: #LUI
          control_signals |= 0x0A3 
       with op == 0xD: #ORI
-         control_signals |= 0x0A4 
+         control_signals |= 0x0C4 
       with op == 0x23: #LW
          control_signals |= 0x2AE
       with op == 0x2B: #SW
@@ -85,13 +85,14 @@ def controller(op, func, reg_dst, branch, regwrite, alu_src, mem_write, mem_to_r
 def reg_read():
    raise NotImplementedError
 '''
-def pc_update(branch_and, imm_ext):
+def pc_update(branch_and, imm_signext, pc):
+   next_pc = pyrtl.WireVector(32, 'next_pc')
    with pyrtl.conditional_assignment:
       with branch_and:
-         pc.next |= pc + 1 + imm_ext
+         next_pc |= pc + 1 + imm_signext
       with pyrtl.otherwise:
-         pc.next |= pc + 1
-   #raise NotImplementedError
+         next_pc |= pc + 1
+   pc.next <<= next_pc
 
 def write_back(rf_write, alu_out, data1, mem_to_reg, mem_write, regwrite):
    #To fix the exceed write port on rf, make it so that you only write once, but the addr changes depending on mem_to_reg
@@ -126,11 +127,14 @@ def top():
    rd = pyrtl.WireVector(bitwidth=5, name='rd')
    func = pyrtl.WireVector(bitwidth=6, name='func')
    imm = pyrtl.WireVector(bitwidth=16, name='imm')
-   imm_ext = pyrtl.WireVector(32, 'imm_ext')
+   imm_signext = pyrtl.WireVector(32, 'imm_signext')
+   imm_zeroext = pyrtl.WireVector(32, 'imm_zeroext')
 
    op, rs, rt, rd, func, imm = decode(instruction, op, rs, rt, rd, func, imm)
-   imm_ext <<= imm.sign_extended(32)
-
+   imm_signext <<= imm.sign_extended(32)
+   imm_zeroext <<= imm.zero_extended(32)
+   #Need to add zero extended stuff
+   
    reg_dst = pyrtl.WireVector(1, 'reg_dst')
    branch = pyrtl.WireVector(1, 'branch')
    regwrite = pyrtl.WireVector(1, 'regwrite')
@@ -160,8 +164,10 @@ def top():
    with pyrtl.conditional_assignment:
       with alu_src == 0:
          alu_in1 |= data1
+      with alu_src == 1:
+         alu_in1 |= imm_signext
       with pyrtl.otherwise:
-         alu_in1 |= imm_ext
+         alu_in1 |= imm_zeroext
    
    zero = pyrtl.WireVector(1, 'zero')
    alu_out = pyrtl.WireVector(32, 'alu_out')
@@ -173,7 +179,7 @@ def top():
    branch_and = pyrtl.WireVector(1, 'branch_and')
    branch_and <<= zero & branch
 
-   pc_update(branch_and, imm_ext)
+   pc_update(branch_and, imm_signext, pc)
 
    #raise NotImplementedError
 
